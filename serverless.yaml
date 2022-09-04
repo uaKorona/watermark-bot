@@ -1,0 +1,33 @@
+{
+  service: "watermark-bot",
+  frameworkVersion: "3",
+
+  package: {
+    excludeDevDependencies: true,
+  },
+
+  provider: {
+    name: "aws",
+    runtime: "nodejs16.x",
+    region: "eu-west-1"
+  },
+
+  plugins: [
+    "serverless-plugin-typescript"
+  ],
+
+  functions: {
+    watermark: {
+      name: "watermark-demo",
+      handler: "handler.watermarkBot",
+      events: [
+        {
+          httpApi: {
+            path: "/telegraf",
+            method: "post",
+          },
+        },
+      ],
+    },
+  },
+}

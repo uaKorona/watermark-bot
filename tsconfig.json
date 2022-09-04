@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "noImplicitAny": true,
+    "strict": true,
+    "module": "NodeNext",
+    "target": "es2021",
+    "esModuleInterop": true
+  },
+  "include": ["handler.ts", "src/**/*"]
+}
