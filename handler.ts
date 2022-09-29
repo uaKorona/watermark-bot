@@ -1,11 +1,10 @@
 import http from "serverless-http";
-import { Telegraf } from "telegraf";
+import {bot} from "./src/bot.js";
+import {MESSAGES} from "./src/messeges.js";
 
-const {WATERMARK_BOT_TOKEN} = process.env;
-const bot = new Telegraf(WATERMARK_BOT_TOKEN as string);
-
-// echo
-bot.on("text", ctx => ctx.reply('Repeat ' + ctx.message.text));
+bot.use((ctx) => {
+    return ctx.replyWithHTML(MESSAGES.unSupportType());
+});
 
 // setup webhook
 export const watermarkBot = http(bot.webhookCallback("/telegraf"));
