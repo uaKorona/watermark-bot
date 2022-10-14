@@ -1,8 +1,9 @@
 import {Context} from "telegraf";
 import {Update} from "typegram";
-import {MessageTypes} from "./message-types.enum.js";
+import {MessageTypes} from "../message-types.enum.js";
 import {PhotoSize, Video, Message} from "typegram/message";
-import {ImageHelper} from "./helpers/image-helper.js";
+import {ImageHelper} from "./image-helper.js";
+import {MARK_POSITIONS} from "../consts/image.consts.js";
 
 export class BotHelper {
     static async builder(): Promise<BotHelper> {
@@ -42,5 +43,9 @@ export class BotHelper {
 
     public getWatermarkedImage(filePath: string): Promise<void | Buffer> {
         return this._imageHelper.getWatermarkedImage(filePath);
+    }
+
+    public changeWatermarkPosition(position: MARK_POSITIONS): Promise<string | Buffer> {
+        return this._imageHelper.getMarkedImageByPosition(position);
     }
 }

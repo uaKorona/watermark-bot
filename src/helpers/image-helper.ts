@@ -1,17 +1,6 @@
 import Jimp from "jimp";
 import {Buffer} from "buffer";
-
-const OPTIONS = {
-    mode: Jimp.BLEND_SOURCE_OVER,
-    opacityDest: 1,
-    opacitySource: 1
-} as const;
-
-const ROWS = 3 as const;
-const DEFAULT_RATIO = 9 as const;
-const LOGO_PATH = './assets/logo4.png';
-const X = 0, Y = 0;
-
+import {DEFAULT_RATIO, LOGO_PATH, MARK_POSITIONS, OPTIONS, ROWS, X, Y} from "../consts/image.consts.js";
 
 export class ImageHelper {
 
@@ -21,24 +10,43 @@ export class ImageHelper {
         return new ImageHelper(jLogo);
     }
 
-    _jLogo: Jimp;
+    private readonly _jLogo: Jimp;
+    private _jImage: Jimp | null = null;
+    private _jLogoResized: Jimp | null = null;
 
     constructor(jLogo: Jimp) {
         this._jLogo = jLogo;
     }
 
     async getWatermarkedImage(filePath: string): Promise<void | Buffer> {
-        const jImage = await Jimp.read(filePath);
+        this._jImage = await Jimp.read(filePath);
+        this._jLogoResized = this._getResizedJLogo(this._jImage);
 
-        return this._markImage(jImage).getBufferAsync(jImage.getMIME())
+        return this._markImage(this._jImage, this._jLogoResized).getBufferAsync(this._jImage.getMIME())
     }
 
-    private _markImage(jImage: Jimp): Jimp {
-        const jLogo = this._doesLogoNeedResize(this._jLogo, jImage)
+     async getMarkedImageByPosition(position: MARK_POSITIONS): Promise<string | Buffer> {
+        if (!this._jImage) {
+            return Promise.resolve('Please, load file first');
+        }
+
+        if (!this._jLogoResized) {
+            return Promise.resolve('Oops, logo is not found');
+        }
+
+        const {x, y} = this._getXYbyPositions(position, this._jImage, this._jLogoResized);
+
+        return this._markImage(this._jImage, this._jLogoResized, x, y).getBufferAsync(this._jImage.getMIME())
+    }
+
+    private _markImage(jImage: Jimp, jLogo: Jimp, x: number = X, y: number = Y): Jimp {
+        return jImage.clone().composite(jLogo, x, y, OPTIONS);
+    }
+
+    private _getResizedJLogo(jImage: Jimp): Jimp {
+        return this._doesLogoNeedResize(this._jLogo, jImage)
             ? this._resizeLogo(this._jLogo, jImage.getWidth())
             : this._jLogo;
-
-        return jImage.composite(jLogo, X, Y, OPTIONS);
     }
 
     private _getSquare(jImg: Jimp): number {
@@ -61,6 +69,26 @@ export class ImageHelper {
         const newWidth = Math.trunc(imgWidth / ROWS);
 
         return jLogo.resize(newWidth, Jimp.AUTO)
+    }
+
+    private _getXYbyPositions(position: MARK_POSITIONS, jImg: Jimp, jLogo: Jimp): { x: number, y: number } {
+        const maxLogoX = jImg.getWidth() - jLogo.getWidth();
+        const maxLogoY = jImg.getHeight() - jLogo.getHeight();
+
+        switch (position) {
+            case MARK_POSITIONS.TOP_RIGHT:
+                return {x: maxLogoX, y: Y};
+
+            case MARK_POSITIONS.BOTTOM_RIGHT:
+                return {x: maxLogoX, y: maxLogoY};
+
+            case MARK_POSITIONS.BOTTOM_LEFT:
+                return {x: X, y: maxLogoY};
+
+            default:
+                return {x: X, y: Y};
+        }
+
     }
 }
 

@@ -1,52 +1,23 @@
 import {Context, Telegraf} from 'telegraf';
 import {Update} from 'typegram';
-import {MESSAGES} from "./messeges.js";
 import {MessageTypes} from "./message-types.enum.js";
-import {BotHelper} from "./bot-helper.js";
-import {Buffer} from "buffer";
-
-const {WATERMARK_BOT_TOKEN} = process.env;
+import {BotHelper} from "./helpers/bot-helper.js";
+import {ENV_CONFIG} from "./env/env.config.js";
+import {BotCommands} from "./helpers/bot-commands.js";
+import {MARK_POSITIONS} from "./consts/image.consts.js";
 
 const botHelper = await BotHelper.builder();
-export const bot: Telegraf<Context<Update>> = new Telegraf(WATERMARK_BOT_TOKEN as string);
+export const bot: Telegraf<Context<Update>> = new Telegraf(ENV_CONFIG.BOT_TOKEN);
 
+const botCommands = new BotCommands(botHelper);
 
-bot.start((ctx) => {
-    ctx.replyWithHTML(MESSAGES.startMessage(ctx.from.first_name));
-});
+bot.start(botCommands.onStart);
 
-bot.use(async (ctx, next) => {
-    if (botHelper.isMessageFromChat(ctx)) {
-        // skip running next middlewares for messages from chat
-        return;
-    }
+bot.use(botCommands.skipMessageFromChat);
 
-    return next(); // running next middleware
-})
+bot.on([MessageTypes.photo, MessageTypes.video], botCommands.onMedia);
 
-bot.on([MessageTypes.photo, MessageTypes.video], async (ctx) => {
-    //console.log( ctx.message);
-
-    const fileId = botHelper.getFileId(ctx.message);
-
-    if (fileId === null) {
-        throw new Error('Can`t get fileId');
-    }
-
-    const fileUrl = await bot.telegram
-        .getFileLink(fileId)
-        .then(url => url.toString());
-
-    if (typeof fileUrl === 'undefined') {
-        return ctx.replyWithHTML(MESSAGES.unknownFileId(ctx.message));
-    }
-
-    ctx.reply('start proceeding');
-
-    const buffer = await botHelper.getWatermarkedImage(fileUrl) as Buffer;
-
-    return ctx.replyWithPhoto({source: buffer})
-});
+bot.use(botCommands.otherMessagesHandler);
 
 
 
