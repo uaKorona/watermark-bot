@@ -37,7 +37,8 @@ export class BotCommands {
         const fileId = this._botHelper.getFileId(ctx.message);
 
         if (fileId === null) {
-            throw new Error('Can`t get fileId');
+            console.log(ctx.message);
+            throw new Error(MESSAGES.unknownFileId());
         }
 
         const fileUrl = await bot.telegram
@@ -45,10 +46,10 @@ export class BotCommands {
             .then(url => url.toString());
 
         if (typeof fileUrl === 'undefined') {
-            return ctx.replyWithHTML(MESSAGES.unknownFileId(ctx.message));
+            return ctx.replyWithHTML(MESSAGES.unknownFileUrl());
         }
 
-        ctx.reply('start proceeding');
+        ctx.reply(MESSAGES.proceeding());
 
         const buffer = await this._botHelper.getWatermarkedImage(fileUrl) as Buffer;
 
@@ -69,7 +70,7 @@ export class BotCommands {
                     return ctx.reply(result);
                 }
 
-                return ctx.reply('processing:  ' + text)
+                return ctx.reply(MESSAGES.positioning( text))
                     .then(() => ctx.replyWithPhoto({source: result}));
             }
 
