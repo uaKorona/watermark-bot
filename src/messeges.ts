@@ -21,4 +21,11 @@ export const MESSAGES = {
 
     positioning: (position: string) => `Застосування: ${position}`,
 
+    fileFirst: () => `Будь ласка, завантаж спочатку файл для обробки`,
+
+    logoNotFound: () => [
+        `Вибач, не можу знайти логотип`,
+        `звернись до адміна, будь ласка`
+    ].join('\n\n'),
+
 }
